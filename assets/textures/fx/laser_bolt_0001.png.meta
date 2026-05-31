@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "655f7ae5-ffa2-46a3-8dc6-1e8b08a5eaba",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "655f7ae5-ffa2-46a3-8dc6-1e8b08a5eaba@6c48a",
+      "displayName": "laser_bolt_0001",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "imageUuidOrDatabaseUri": "655f7ae5-ffa2-46a3-8dc6-1e8b08a5eaba",
+        "isUuid": true,
+        "visible": false,
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "655f7ae5-ffa2-46a3-8dc6-1e8b08a5eaba@f9941",
+      "displayName": "laser_bolt_0001",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": -1.5,
+        "offsetY": -1.5,
+        "trimX": 4,
+        "trimY": 7,
+        "width": 5,
+        "height": 5,
+        "rawWidth": 16,
+        "rawHeight": 16,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -2.5,
+            -2.5,
+            0,
+            2.5,
+            -2.5,
+            0,
+            -2.5,
+            2.5,
+            0,
+            2.5,
+            2.5,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            4,
+            9,
+            9,
+            9,
+            4,
+            4,
+            9,
+            4
+          ],
+          "nuv": [
+            0.25,
+            0.25,
+            0.5625,
+            0.25,
+            0.25,
+            0.5625,
+            0.5625,
+            0.5625
+          ],
+          "minPos": [
+            -2.5,
+            -2.5,
+            0
+          ],
+          "maxPos": [
+            2.5,
+            2.5,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "655f7ae5-ffa2-46a3-8dc6-1e8b08a5eaba@6c48a",
+        "atlasUuid": "",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": true,
+    "redirect": "655f7ae5-ffa2-46a3-8dc6-1e8b08a5eaba@6c48a"
+  }
+}

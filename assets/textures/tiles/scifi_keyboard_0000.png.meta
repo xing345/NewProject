@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "c82c04bd-2831-4745-b86c-dd99bce2c58a",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "c82c04bd-2831-4745-b86c-dd99bce2c58a@6c48a",
+      "displayName": "scifi_keyboard_0000",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "imageUuidOrDatabaseUri": "c82c04bd-2831-4745-b86c-dd99bce2c58a",
+        "isUuid": true,
+        "visible": false,
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "c82c04bd-2831-4745-b86c-dd99bce2c58a@f9941",
+      "displayName": "scifi_keyboard_0000",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 3,
+        "offsetY": 0.5,
+        "trimX": 6,
+        "trimY": 3,
+        "width": 10,
+        "height": 9,
+        "rawWidth": 16,
+        "rawHeight": 16,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -5,
+            -4.5,
+            0,
+            5,
+            -4.5,
+            0,
+            -5,
+            4.5,
+            0,
+            5,
+            4.5,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            6,
+            13,
+            16,
+            13,
+            6,
+            4,
+            16,
+            4
+          ],
+          "nuv": [
+            0.375,
+            0.25,
+            1,
+            0.25,
+            0.375,
+            0.8125,
+            1,
+            0.8125
+          ],
+          "minPos": [
+            -5,
+            -4.5,
+            0
+          ],
+          "maxPos": [
+            5,
+            4.5,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "c82c04bd-2831-4745-b86c-dd99bce2c58a@6c48a",
+        "atlasUuid": "",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": false,
+    "hasAlpha": true,
+    "redirect": "c82c04bd-2831-4745-b86c-dd99bce2c58a@6c48a"
+  }
+}

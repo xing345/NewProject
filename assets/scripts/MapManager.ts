@@ -4,66 +4,92 @@ const { ccclass, property } = _decorator;
 
 /**
  * 地图格子的逻辑类型（用于生成与后续碰撞/寻址）
+ *
+ * 三类格子决定了不同的游戏行为：
+ * - FLOOR：玩家和子弹均可穿过
+ * - WALL：玩家和子弹均被阻挡（实心墙/集装箱）
+ * - LOW_COVER：玩家可穿过但子弹被阻挡（沙袋/木箱），或减速区
  */
-enum TileType {
+export enum TileType {
     /** 可走平地 */
     FLOOR = 0,
-    /** 障碍（墙、箱子、仙人掌等） */
+    /** 实心障碍（墙、集装箱等），阻挡移动和子弹 */
     WALL = 1,
+    /** 低矮掩体（沙袋、木箱等），阻挡子弹但可跨越 */
+    LOW_COVER = 2,
 }
 
 /**
- * 路线 B：用代码网格 + Sprite 随机铺地砖。
+ * 地图管理器 —— 适配 48x48 主地砖 + 16x16 辅助地砖的射击对战地图。
  *
  * 使用说明（编辑器）：
  * 1. 在场景中创建空节点 `MapRoot`，本组件挂在该节点上。
- * 2. 将若干地板、障碍的 SpriteFrame 拖入对应数组（勿留空数组，否则运行时会跳过生成）。
+ * 2. 将若干地板、障碍、掩体的 SpriteFrame 拖入对应数组（勿留空数组，否则运行时会跳过生成）。
  * 3. 若 `mapSeed >= 0`，每局地图可完全复现（联机时服务器下发同一种子即可）。
- *
- * 说明：Gemini 原版在 createTile 里只加了 Sprite、却去 getComponent(UITransform)，会得到 null 并崩溃。
- * 这里改为显式 addComponent(UITransform)，并把锚点设为左下角，配合“从左下角往右上铺格”的坐标更直观。
+ * 4. 调用 getTileTypeAt(worldX, worldY) 可查询任意世界坐标对应的格子类型，用于子弹碰撞判定。
  */
 @ccclass('MapManager')
 export class MapManager extends Component {
-    @property({ type: [SpriteFrame], displayName: '地板素材库' })
+
+    // ───────────────────────── 编辑器属性 ─────────────────────────
+
+    @property({ type: [SpriteFrame], displayName: '地板素材库', group: { name: '素材数组' } })
     public floorSprites: SpriteFrame[] = [];
 
-    @property({ type: [SpriteFrame], displayName: '障碍素材库' })
+    @property({ type: [SpriteFrame], displayName: '实心墙素材库', group: { name: '素材数组' } })
     public wallSprites: SpriteFrame[] = [];
 
-    @property({ displayName: '地图宽度（格）', tooltip: '横向格子数量' })
+    @property({ type: [SpriteFrame], displayName: '低矮掩体素材库', group: { name: '素材数组' } })
+    public coverSprites: SpriteFrame[] = [];
+
+    @property({ displayName: '地图宽度（格）', tooltip: '横向格子数量', group: { name: '地图参数' } })
     public mapWidth = 20;
 
-    @property({ displayName: '地图高度（格）', tooltip: '纵向格子数量' })
+    @property({ displayName: '地图高度（格）', tooltip: '纵向格子数量', group: { name: '地图参数' } })
     public mapHeight = 20;
 
     @property({
-        displayName: '障碍物密度',
+        displayName: '实心墙密度',
         tooltip: '0~1，越大墙越多。边缘永远是墙。',
         range: [0, 1, 0.01],
+        group: { name: '地图参数' },
     })
-    public obstacleDensity = 0.15;
+    public obstacleDensity = 0.20;
+
+    @property({
+        displayName: '低矮掩体密度',
+        tooltip: '0~1，占非边缘区域的比例（约 5%）。掩体不会与墙重叠。',
+        range: [0, 0.3, 0.01],
+        group: { name: '地图参数' },
+    })
+    public coverDensity = 0.05;
 
     /**
      * 地图随机种子。
      * - 小于 0：每次运行使用 Math.random()（本地调试方便）。
      * - 大于等于 0：固定种子，generateMap 结果可复现（联机一致性 / 回放）。
      */
-    @property({ displayName: '地图种子', tooltip: '负数=每次随机；>=0 可复现同一地图' })
+    @property({ displayName: '地图种子', tooltip: '负数=每次随机；>=0 可复现同一地图', group: { name: '地图参数' } })
     public mapSeed = -1;
 
-    /** 与素材一致的像素尺寸（Kenney 该包地砖为 16x16） */
-    @property({ displayName: '单格尺寸（像素）', tooltip: '通常填 16，需与 SpriteFrame 尺寸一致' })
-    public tileSize = 16;
+    /** 与素材一致的像素尺寸（新素材主地砖为 48x48） */
+    @property({ displayName: '单格尺寸（像素）', tooltip: '需与 SpriteFrame 尺寸一致，主地砖填 48', group: { name: '地图参数' } })
+    public tileSize = 48;
 
-    /** 运行时网格数据，方便后续做碰撞、道具刷新等（只读使用即可） */
+    // ───────────────────────── 运行时数据 ─────────────────────────
+
+    /** 运行时网格数据，值为 TileType 枚举。grid[x][y] 对应第 x 列第 y 行。 */
     public readonly grid: number[][] = [];
 
     private _rngState = 0;
 
+    // ───────────────────────── 生命周期 ─────────────────────────
+
     protected start(): void {
         this.generateMap();
     }
+
+    // ───────────────────────── 公开接口 ─────────────────────────
 
     /**
      * 生成（或重新生成）整张地图。
@@ -91,8 +117,16 @@ export class MapManager extends Component {
                 const inSpawnSafe = Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1;
                 const isEdge = x === 0 || x === this.mapWidth - 1 || y === 0 || y === this.mapHeight - 1;
 
-                if (isEdge || (this._rand01() < this.obstacleDensity && !inSpawnSafe)) {
+                if (isEdge) {
+                    // 边缘强制为实心墙
                     type = TileType.WALL;
+                } else if (!inSpawnSafe) {
+                    const roll = this._rand01();
+                    if (roll < this.obstacleDensity) {
+                        type = TileType.WALL;
+                    } else if (roll < this.obstacleDensity + this.coverDensity) {
+                        type = TileType.LOW_COVER;
+                    }
                 }
 
                 row.push(type);
@@ -101,13 +135,111 @@ export class MapManager extends Component {
         }
     }
 
-    private createTile(gridX: number, gridY: number, type: TileType): void {
-        if (type === TileType.FLOOR && this.floorSprites.length === 0) {
-            console.warn('[MapManager] 地板素材库为空，跳过绘制地板');
-            return;
+    /**
+     * 根据世界坐标查询格子类型。
+     *
+     * 用法示例（子弹碰撞检测）：
+     * ```ts
+     * const mapMgr = this.node.parent.getComponent(MapManager);
+     * const type = mapMgr.getTileTypeAt(bullet.worldPos.x, bullet.worldPos.y);
+     * if (type === TileType.WALL) { ... }        // 完全阻挡
+     * if (type === TileType.LOW_COVER) { ... }   // 子弹被阻挡，人可跨越
+     * ```
+     *
+     * @param worldX 世界坐标 X
+     * @param worldY 世界坐标 Y
+     * @returns TileType 枚举值；坐标越界返回 TileType.WALL
+     */
+    public getTileTypeAt(worldX: number, worldY: number): TileType {
+        // 将世界坐标转换为 MapRoot 本地坐标
+        const ui = this.node.getComponent(UITransform)!;
+        const localPos = ui.convertToNodeSpaceAR(new Vec3(worldX, worldY, 0));
+        const gx = Math.floor(localPos.x / this.tileSize);
+        const gy = Math.floor(localPos.y / this.tileSize);
+
+        if (gx < 0 || gx >= this.mapWidth || gy < 0 || gy >= this.mapHeight) {
+            return TileType.WALL; // 越界视为墙
         }
-        if (type === TileType.WALL && this.wallSprites.length === 0) {
-            console.warn('[MapManager] 障碍素材库为空，跳过绘制障碍');
+        return this.grid[gx][gy];
+    }
+
+    /**
+     * 根据网格坐标查询格子类型（供寻路等逻辑直接使用）。
+     *
+     * @param gx 网格 X（列）
+     * @param gy 网格 Y（行）
+     * @returns TileType 枚举值；坐标越界返回 TileType.WALL
+     */
+    public getTileTypeAtGrid(gx: number, gy: number): TileType {
+        if (gx < 0 || gx >= this.mapWidth || gy < 0 || gy >= this.mapHeight) {
+            return TileType.WALL;
+        }
+        return this.grid[gx][gy];
+    }
+
+    /**
+     * 判断某格是否可通行（玩家移动判定）。
+     * FLOOR 可通行；WALL 不可通行；LOW_COVER 可通行（但可能减速）。
+     */
+    public isWalkable(gx: number, gy: number): boolean {
+        const type = this.getTileTypeAtGrid(gx, gy);
+        return type !== TileType.WALL;
+    }
+
+    /**
+     * 判断某格是否阻挡子弹。
+     * WALL 和 LOW_COVER 均阻挡子弹；FLOOR 不阻挡。
+     */
+    public isBulletBlocking(gx: number, gy: number): boolean {
+        const type = this.getTileTypeAtGrid(gx, gy);
+        return type === TileType.WALL || type === TileType.LOW_COVER;
+    }
+
+    /**
+     * 将世界坐标转换为网格坐标。
+     * @returns { gx, gy } 或 null（越界时）
+     */
+    public worldToGrid(worldX: number, worldY: number): { gx: number; gy: number } | null {
+        const ui = this.node.getComponent(UITransform)!;
+        const localPos = ui.convertToNodeSpaceAR(new Vec3(worldX, worldY, 0));
+        const gx = Math.floor(localPos.x / this.tileSize);
+        const gy = Math.floor(localPos.y / this.tileSize);
+        if (gx < 0 || gx >= this.mapWidth || gy < 0 || gy >= this.mapHeight) {
+            return null;
+        }
+        return { gx, gy };
+    }
+
+    /**
+     * 将网格坐标转换为世界坐标（格子中心）。
+     */
+    public gridToWorld(gx: number, gy: number): Vec3 {
+        const ui = this.node.getComponent(UITransform)!;
+        const localX = gx * this.tileSize + this.tileSize / 2;
+        const localY = gy * this.tileSize + this.tileSize / 2;
+        return ui.convertToWorldSpaceAR(new Vec3(localX, localY, 0));
+    }
+
+    // ───────────────────────── 内部方法 ─────────────────────────
+
+    private createTile(gridX: number, gridY: number, type: TileType): void {
+        let sprites: SpriteFrame[];
+        switch (type) {
+            case TileType.FLOOR:
+                sprites = this.floorSprites;
+                break;
+            case TileType.WALL:
+                sprites = this.wallSprites;
+                break;
+            case TileType.LOW_COVER:
+                sprites = this.coverSprites;
+                break;
+            default:
+                sprites = this.floorSprites;
+        }
+
+        if (sprites.length === 0) {
+            console.warn(`[MapManager] 素材库为空(type=${type})，跳过绘制 Tile_${gridX}_${gridY}`);
             return;
         }
 
@@ -124,13 +256,8 @@ export class MapManager extends Component {
         const sprite = tileNode.addComponent(Sprite);
         sprite.sizeMode = Sprite.SizeMode.CUSTOM;
 
-        if (type === TileType.FLOOR) {
-            const idx = Math.floor(this._rand01() * this.floorSprites.length);
-            sprite.spriteFrame = this.floorSprites[idx];
-        } else {
-            const idx = Math.floor(this._rand01() * this.wallSprites.length);
-            sprite.spriteFrame = this.wallSprites[idx];
-        }
+        const idx = Math.floor(this._rand01() * sprites.length);
+        sprite.spriteFrame = sprites[idx];
     }
 
     private _prepareRng(): void {
