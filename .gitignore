@@ -22,3 +22,8 @@ node_modules/
 # WebStorm
 #//////////////////////////
 .idea/
+
+#//////////////////////////
+# Raw downloaded assets (not needed in repo)
+#//////////////////////////
+raw_assets/
