@@ -109,10 +109,13 @@
       "b": 255,
       "a": 255
     },
-    "_spriteFrame": null,
+    "_spriteFrame": {
+      "__uuid__": "be449613-e94e-4c9b-bf58-eb55b67a4f23@f9941",
+      "__expectedType__": "cc.SpriteFrame"
+    },
     "_type": 0,
     "_fillType": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -138,6 +141,7 @@
       "__id__": 0
     },
     "fileId": "b2CTk+PQBEiq1xjuYFmhi2",
+    "instance": null,
     "targetOverrides": null
   }
 ]

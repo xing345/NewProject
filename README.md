@@ -48,7 +48,9 @@ assets/
 │   ├── weapons_and_items/  # 武器道具 (131 个)
 │   └── fx/                 # 特效素材 (33 个)
 ├── scripts/
-│   └── MapManager.ts       # 地图管理器 (含碰撞查询接口)
+│   ├── MapManager.ts       # 地图管理器 (含碰撞查询接口)
+│   ├── PlayerController.ts # 双人键盘控制 (WASD / 方向键)
+│   └── GameManager.ts      # 游戏管理器 (动态角色出生)
 
 scripts/
 └── process_assets.py       # 素材自动切分与整理脚本
@@ -58,15 +60,33 @@ raw_assets/                 # 原始下载素材 (已 gitignore)
 
 ## 使用方法
 
+### 基本配置
+
 1. 使用 Cocos Creator 3.8.8 打开项目
-2. 创建新场景，在场景中创建空节点 `MapRoot`
-3. 将 `MapManager` 组件挂载到 `MapRoot` 节点
-4. 在 Inspector 中配置素材数组：
+2. 创建新场景，在场景中创建以下节点：
+   - `MapRoot`（空节点）— 挂 `MapManager` 组件
+   - `GameManager`（空节点）— 挂 `GameManager` 组件
+3. 在 `MapRoot` 的 Inspector 中配置素材数组：
    - `floorSprites` — 拖入 48x48 地板地砖
    - `wallSprites` — 拖入 48x48 实心墙地砖
    - `coverSprites` — 拖入 48x48 低矮掩体地砖（沙袋/木箱等）
-5. 调整参数：`tileSize=48`、`obstacleDensity=0.20`、`coverDensity=0.05`
-6. 点击运行即可看到随机生成的射击对战地图
+4. 在 `GameManager` 的 Inspector 中：
+   - `mapRoot` — 拖入 MapRoot 节点
+   - `playerPrefab` — 拖入玩家 Prefab（或开启 `useFallback` 使用方块角色）
+5. 点击运行，地图自动生成，双人在中心出生
+
+### 键盘控制
+
+| 玩家 | 移动 | 键位 |
+|------|------|------|
+| 玩家1（红） | 上/下/左/右 | W / S / A / D |
+| 玩家2（蓝） | 上/下/左/右 | ↑ / ↓ / ← / → |
+
+### 碰撞规则
+
+- **FLOOR（地板）**：玩家和子弹均可穿过
+- **WALL（实心墙）**：玩家和子弹均被阻挡
+- **LOW_COVER（低矮掩体）**：玩家可穿过，子弹被阻挡
 
 ## 地图管理器接口
 
